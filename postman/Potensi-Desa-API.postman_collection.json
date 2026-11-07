@@ -1,0 +1,812 @@
+{
+  "info": {
+    "name": "Potensi Desa Bendungan API",
+    "description": "Jalankan folder ini berurutan dengan Collection Runner. Isi variabel adminEmail dan adminPassword dengan akun admin yang dibuat lewat: npm run admin:create",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000"
+    },
+    {
+      "key": "adminEmail",
+      "value": "ISI_EMAIL_ADMIN"
+    },
+    {
+      "key": "adminPassword",
+      "value": "ISI_PASSWORD_ADMIN"
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "kategoriId",
+      "value": ""
+    },
+    {
+      "key": "potensiId",
+      "value": ""
+    },
+    {
+      "key": "fotoId",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "00 Health check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/health",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "health"
+          ]
+        },
+        "description": ""
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 200', function () { pm.response.to.have.status(200); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "01 POST /auth/login (password salah -> 401)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/auth/login",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "auth",
+            "login"
+          ]
+        },
+        "description": "",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"salah-salah\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 401', function () { pm.response.to.have.status(401); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 POST /auth/login (benar -> 200, token disimpan)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/auth/login",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "auth",
+            "login"
+          ]
+        },
+        "description": "UF02 langkah 1. Token otomatis disimpan ke variabel token.",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+              "pm.collectionVariables.set('token', pm.response.json().data.token);",
+              "pm.test('Tidak ada password di respons', () => pm.expect(JSON.stringify(pm.response.json())).to.not.include('password'));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 GET /auth/me",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/auth/me",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "auth",
+            "me"
+          ]
+        },
+        "description": ""
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 200', function () { pm.response.to.have.status(200); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 GET /kategori (publik)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/kategori",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "kategori"
+          ]
+        },
+        "description": ""
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 200', function () { pm.response.to.have.status(200); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "05 POST /kategori (admin)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/kategori",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "kategori"
+          ]
+        },
+        "description": "",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nama_kategori\": \"Kategori Uji Postman\",\n  \"deskripsi\": \"Dibuat dari Postman\",\n  \"icon\": \"star\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 201', function () { pm.response.to.have.status(201); });",
+              "pm.collectionVariables.set('kategoriId', pm.response.json().data.id_kategori);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "06 POST /potensi (admin, draft + foto)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/potensi",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "potensi"
+          ]
+        },
+        "description": "UF02 langkah 5 dan 6. id_kategori diambil otomatis dari langkah 05.",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"id_kategori\": \"{{kategoriId}}\",\n  \"nama_potensi\": \"Potensi Uji Postman\",\n  \"deskripsi\": \"Data uji dari Postman\",\n  \"alamat\": \"Dusun Uji\",\n  \"latitude\": -8.0661,\n  \"longitude\": 111.9012,\n  \"kontak\": \"0812 3456 7890\",\n  \"foto\": [\n    {\n      \"url_foto\": \"https://example.com/foto-uji.jpg\",\n      \"caption\": \"Foto uji\"\n    }\n  ]\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 201', function () { pm.response.to.have.status(201); });",
+              "const d = pm.response.json().data;",
+              "pm.test('Status default draft', () => pm.expect(d.status).to.eql('draft'));",
+              "pm.collectionVariables.set('potensiId', d.id_potensi);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "07 GET /potensi/:id (publik, masih draft -> 404)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/potensi/{{potensiId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "potensi",
+            "{{potensiId}}"
+          ]
+        },
+        "description": ""
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 404', function () { pm.response.to.have.status(404); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "08 PUT /potensi/:id (admin menerbitkan)",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/potensi/{{potensiId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "potensi",
+            "{{potensiId}}"
+          ]
+        },
+        "description": "",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"terbit\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 200', function () { pm.response.to.have.status(200); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "09 GET /potensi/:id (publik, kini terbit -> 200)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/potensi/{{potensiId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "potensi",
+            "{{potensiId}}"
+          ]
+        },
+        "description": "UF01 langkah 5 dan 6."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+              "pm.test('Ada tautan WhatsApp dan foto', () => { const d = pm.response.json().data; pm.expect(d.whatsapp_link).to.include('wa.me'); pm.expect(d.foto.length).to.be.above(0); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "10 GET /potensi (cari + filter kategori)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/potensi?q=uji&kategori={{kategoriId}}&limit=5",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "potensi"
+          ],
+          "query": [
+            {
+              "key": "q",
+              "value": "uji"
+            },
+            {
+              "key": "kategori",
+              "value": "{{kategoriId}}"
+            },
+            {
+              "key": "limit",
+              "value": "5"
+            }
+          ]
+        },
+        "description": "UF01 langkah 3 dan 4."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+              "pm.test('Hanya terbit', () => pm.response.json().data.forEach(p => pm.expect(p.status).to.eql('terbit')));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "11 GET /potensi/peta (GeoJSON untuk Leaflet)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/potensi/peta",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "potensi",
+            "peta"
+          ]
+        },
+        "description": "Peta Interaktif. Format [longitude, latitude]."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+              "pm.test('FeatureCollection', () => pm.expect(pm.response.json().type).to.eql('FeatureCollection'));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "12 POST /potensi/:id/foto (admin)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/potensi/{{potensiId}}/foto",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "potensi",
+            "{{potensiId}}",
+            "foto"
+          ]
+        },
+        "description": "",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"url_foto\": \"https://example.com/foto-kedua.jpg\",\n  \"caption\": \"Foto kedua\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 201', function () { pm.response.to.have.status(201); });",
+              "pm.collectionVariables.set('fotoId', pm.response.json().data.id_foto);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "13 PUT /foto/:id (admin)",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/foto/{{fotoId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "foto",
+            "{{fotoId}}"
+          ]
+        },
+        "description": "",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"caption\": \"Caption diubah\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 200', function () { pm.response.to.have.status(200); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "14 DELETE /foto/:id (admin)",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/foto/{{fotoId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "foto",
+            "{{fotoId}}"
+          ]
+        },
+        "description": ""
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 200', function () { pm.response.to.have.status(200); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "15 POST /potensi tanpa token (harus 401)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/potensi",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "potensi"
+          ]
+        },
+        "description": "",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"id_kategori\": 1,\n  \"nama_potensi\": \"Tanpa token\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 401', function () { pm.response.to.have.status(401); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "16 POST /potensi data tidak valid (harus 400)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/potensi",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "potensi"
+          ]
+        },
+        "description": "",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nama_potensi\": \"Tanpa kategori\",\n  \"latitude\": -8.0\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 400', function () { pm.response.to.have.status(400); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "17 DELETE /kategori/:id yang masih dipakai (harus 409)",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/kategori/{{kategoriId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "kategori",
+            "{{kategoriId}}"
+          ]
+        },
+        "description": ""
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 409', function () { pm.response.to.have.status(409); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "18 DELETE /potensi/:id (admin, foto ikut terhapus)",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/potensi/{{potensiId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "potensi",
+            "{{potensiId}}"
+          ]
+        },
+        "description": ""
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 200', function () { pm.response.to.have.status(200); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "19 DELETE /kategori/:id (kini tidak dipakai -> 200)",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/kategori/{{kategoriId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "kategori",
+            "{{kategoriId}}"
+          ]
+        },
+        "description": ""
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 200', function () { pm.response.to.have.status(200); });"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
